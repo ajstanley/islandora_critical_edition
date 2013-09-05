@@ -84,3 +84,16 @@ function islandora_critical_edition_preprocess_islandora_critical_edition(&$vari
   // Critical Editions requires its own js init script.
   drupal_add_js($critical_edition_module_path . '/cwrcwriter/resources/js/islandora_init.js');
 }
+
+/**
+ * Implements hook_preprocess_islandora_versionable_object().
+ */
+function islandora_critical_edition_preprocess_islandora_versionable_object(&$variables) {
+  $object = $variables['islandora_object'];
+  
+}
+
+function get_member_objects($object) {
+
+  
+}
