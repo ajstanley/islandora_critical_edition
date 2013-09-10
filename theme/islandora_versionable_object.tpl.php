@@ -1,35 +1,31 @@
 <?php
-
 /**
  * @file
  * islandora-basic-collection.tpl.php
- *
- * @TODO: needs documentation about file and variables
  */
+$object = $variables['islandora_object'];
+$members = $variables['members'];
+$critical_edition = array_search('islandora:criticalEditionCModel', $members);
+$edition_object = islandora_object_load($critical_edition);
+$transcriptions = array_keys($members, 'islandora:transcriptionCModel');
+drupal_set_breadcrumb(islandora_get_breadcrumbs($object));
+drupal_set_title($object->label);
 ?>
+<div class ="versionable_object_header">
+  <?php print "<h1>" . $object->label . "</h12>"; ?>
+</div>
+<div class="islandora_cwrcwriter_object">
+  <?php if ($critical_edition): ?>
+    <?php print l($edition_object->label, "islandora/object/${critical_edition}");  ?>
+  <?php endif; ?>
+</div>
 
-<div class="islandora islandora-basic-collection">
-    <?php $row_field = 0; ?>
-    <?php foreach($associated_objects_array as $associated_object): ?>
-      <div class="islandora-basic-collection-object islandora-basic-collection-list-item clearfix">
-        <dl class="<?php print $associated_object['class']; ?>">
-            <dt>
-              <?php if (isset($associated_object['thumb_link'])): ?>
-                <?php print $associated_object['thumb_link']; ?>
-              <?php endif; ?>
-            </dt>
-            <dd class="collection-value <?php print isset($associated_object['dc_array']['dc:title']['class']) ? $associated_object['dc_array']['dc:title']['class'] : ''; ?> <?php print $row_field == 0 ? ' first' : ''; ?>">
-              <?php if (isset($associated_object['thumb_link'])): ?>
-                <strong><?php print $associated_object['title_link']; ?></strong>
-              <?php endif; ?>
-            </dd>
-            <?php if (isset($associated_object['dc_array']['dc:description']['value'])): ?>
-              <dd class="collection-value <?php print $associated_object['dc_array']['dc:description']['class']; ?>">
-                <?php print $associated_object['dc_array']['dc:description']['value']; ?>
-              </dd>
-            <?php endif; ?>
-        </dl>
-      </div>
-    <?php $row_field++; ?>
-    <?php endforeach; ?>
+<div class ="islandora_critical_transcriptions" >
+  <?php foreach ($transcriptions as $transcription): ?>
+    <?php 
+    $transcription_object = islandora_object_load($transcription);
+    print l($transcription_object->label, "islandora/object/$transcription_object");
+    print "<br />";
+    ?>
+  <?php endforeach; ?>
 </div>

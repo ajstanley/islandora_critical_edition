@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * This file contains themeing functions for islandora_critical_edition.
@@ -35,38 +36,38 @@ function islandora_critical_edition_preprocess_islandora_critical_edition(&$vari
   $variables['images_path'] = url($image_annotation_module_path . '/shared_canvas', array('absolute' => TRUE));
   drupal_add_js(array('islandora_image_annotation' => array('images_path' => $variables['images_path'] . '/imgs')), 'setting');
   drupal_add_js(array(
-      'islandora_critical_edition' => array(
-        'book_pid' => islandora_critical_edition_get_object_of_critical_edition(
+    'islandora_critical_edition' => array(
+      'book_pid' => islandora_critical_edition_get_object_of_critical_edition(
           $variables['islandora_object']))), 'setting');
 
   drupal_add_js(array(
-      'islandora_critical_edition' => array(
-        'images_path' => $variables['images_path'])), 'setting');
+    'islandora_critical_edition' => array(
+      'images_path' => $variables['images_path'])), 'setting');
 
   // Passing the page pid, instead of getting if from the
   // URL on the javascript side.
   drupal_add_js(array(
-      'islandora_critical_edition' => array(
-        'page_pid' => $pids[0])), 'setting');
+    'islandora_critical_edition' => array(
+      'page_pid' => $pids[0])), 'setting');
 
   // To avoid hard coded values in js, this is the best option.
   drupal_add_js(array(
-      'islandora_critical_edition' => array(
-        'module_base' => $critical_edition_module_path)), 'setting');
+    'islandora_critical_edition' => array(
+      'module_base' => $critical_edition_module_path)), 'setting');
 
   drupal_add_css($critical_edition_module_path . '/cwrcwriter/resources/css/style_2.css');
   // This custom css differs from the one in the image annotation module.
   islandora_image_annotation_include_common_css();
-  
+
   drupal_add_css($critical_edition_module_path . '/cwrcwriter/resources/js/snippet/jquery.snippet.css');
   drupal_add_css($critical_edition_module_path . '/cwrcwriter/resources/css/emic_canvas.css');
   drupal_add_css($critical_edition_module_path . '/cwrcwriter/resources/css/screen.css');
   drupal_add_css($critical_edition_module_path . '/cwrcwriter/resources/css/style.css');
   drupal_add_css($critical_edition_module_path . '/cwrcwriter/resources/css/critical_edition.css');
-  
+
   islandora_image_annotation_include_common_js();
-  
-  
+
+
   drupal_add_js($critical_edition_module_path . '/cwrcwriter/resources/js/tinymce/jscripts/tiny_mce/jquery.tinymce.js');
   drupal_add_js($critical_edition_module_path . '/cwrcwriter/resources/js/jstree/jquery.hotkeys.js');
   drupal_add_js($critical_edition_module_path . '/cwrcwriter/resources/js/jstree/jquery.jstree.js');
@@ -90,10 +91,4 @@ function islandora_critical_edition_preprocess_islandora_critical_edition(&$vari
  */
 function islandora_critical_edition_preprocess_islandora_versionable_object(&$variables) {
   $object = $variables['islandora_object'];
-  
-}
-
-function get_member_objects($object) {
-
-  
 }

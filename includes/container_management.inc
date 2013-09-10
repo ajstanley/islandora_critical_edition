@@ -53,11 +53,14 @@ function islandora_critical_edition_container_management(array $form, array &$fo
  *   The form state.
  */
 function islandora_critical_edition_container_management_submit(array $form, array &$form_state) {
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
   $action = $form_state['triggering_element']['#attributes']['source'];
   $pid = $form_state['values']['pid'];
+  $apparatus = key(islandora_critical_edition_get_members($pid, 'islandora:criticalApparatusCModel'));
+  
   switch ($action) {
     case 'populate':
-      drupal_goto("islandora/object/$pid/manage/datastreams/add");
+      drupal_goto("islandora/object/$apparatus/manage/datastreams/add");
 
     case 'new_versionable':
       drupal_goto("islandora/object/$pid/manage/collection/ingest");
@@ -68,7 +71,7 @@ function islandora_critical_edition_container_management_submit(array $form, arr
 }
 
 /**
- * Attaches amd detaches versionable objects from Criitcal Edition object.
+ * Attaches and detaches versionable objects from Criitcal Edition object.
  *
  * @param array $form
  *   The form
@@ -81,9 +84,9 @@ function islandora_critical_edition_container_management_submit(array $form, arr
  *   Drupal form.
  */
 function islandora_critical_edition_attach_versionable(array $form, array &$form_state, AbstractObject $object) {
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
   $objects = islandora_get_versionable_objects();
-  $chosen = islandora_get_associated_versionable_objects($object->id);
-
+  $chosen = array_keys(islandora_critical_edition_get_members($object->id, 'islandora:versionableObjectCModel'));
   $comparator = function ($a, $b) use ($chosen) {
     $a_val = $b_val = 0;
     if (in_array($a, $chosen)) {
@@ -146,11 +149,13 @@ function islandora_critical_edition_attach_versionable(array $form, array &$form
  *   returns if nothing chosen.
  */
 function islandora_critical_edition_attach_versionable_submit($form, $form_state) {
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
   if (!isset($form_state['values']['versionable_objects'])) {
     return;
   }
   $desired_objects = array_filter(array_values($form_state['values']['versionable_objects']));
-  $existing_objects = islandora_get_associated_versionable_objects($form_state['values']['pid']);
+  $attached = islandora_critical_edition_get_members($form_state['values']['pid'], "islandora:versionableObjectCModel");
+  $existing_objects = array_keys($attached);
   $to_add = array_diff($desired_objects, $existing_objects);
   $to_remove = array_diff($existing_objects, $desired_objects);
   if ($to_add) {
