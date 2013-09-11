@@ -134,3 +134,36 @@ function islandora_critical_edition_get_members($object_pid, $content_model = NU
   }
   return $objects;
 }
+
+/**
+ * Gets all transcriptions related to this object.
+ *
+ * @param String $versionable_object_pid
+ *   PID of object
+ *
+ * @return array
+ *   Array of pid=>label pairs
+ */
+function islandora_critical_get_related_transcriptions($versionable_object_pid) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $tuque = islandora_get_tuque_connection();
+  $query = "
+            PREFIX fm: <" . FEDORA_MODEL_URI . ">
+            PREFIX fr: <" . FEDORA_RELS_EXT_URI . ">
+
+            SELECT DISTINCT ?subject ?label FROM <#ri>
+                WHERE {
+                        {?subject fm:hasModel <info:fedora/islandora:transcriptionCModel>;
+                                  fr:isMemberOf <info:fedora/$versionable_object_pid>;
+                       }
+                 OPTIONAL{
+                           ?subject fm:label  ?label; 
+                          }
+                       }";
+  $objects = array();
+  $results = $tuque->repository->ri->sparqlQuery($query, 'unlimited');
+  foreach ($results as $result) {
+    $objects[$result['subject']['value']] = $result['label']['value'];
+  }
+  return $objects;
+}

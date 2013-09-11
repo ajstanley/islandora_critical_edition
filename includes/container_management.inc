@@ -19,7 +19,15 @@
  *   The Drupal form definition.
  */
 function islandora_critical_edition_container_management(array $form, array &$form_state, AbstractObject $object) {
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
   $path = drupal_get_path('module', 'islandora_critical_edition');
+  drupal_add_css("$path/css/critical_edition_management.css");
+  $versionable_objects = array_keys(islandora_critical_edition_get_members($object->id, 'islandora:versionableObjectCModel'));
+  $transcriptions = array();
+  foreach ($versionable_objects as $versionable_object) {
+    $transcriptions = array_merge($transcriptions, array_keys(islandora_critical_get_related_transcriptions($versionable_object)));
+  }
+
   drupal_add_css("$path/css/critical_edition_management.css");
   $form = array();
   $form['create_new'] = array(
@@ -37,6 +45,13 @@ function islandora_critical_edition_container_management(array $form, array &$fo
     '#value' => t('Populate Critical Paratext'),
     '#attributes' => array('source' => 'populate', 'class' => array('critical_edition_submit')),
   );
+  if (!empty($transcriptions)) {
+    $form['mvd'] = array(
+      '#type' => 'submit',
+      '#value' => t('Create/Update MVD'),
+      '#attributes' => array('source' => 'make_mvd', 'class' => array('critical_edition_submit')),
+    );
+  }
   $form['pid'] = array(
     '#type' => 'hidden',
     '#value' => $object->id,
@@ -53,25 +68,30 @@ function islandora_critical_edition_container_management(array $form, array &$fo
  *   The form state.
  */
 function islandora_critical_edition_container_management_submit(array $form, array &$form_state) {
-  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
   $action = $form_state['triggering_element']['#attributes']['source'];
   $pid = $form_state['values']['pid'];
-  $apparatus = key(islandora_critical_edition_get_members($pid, 'islandora:criticalApparatusCModel'));
-  
+
   switch ($action) {
     case 'populate':
-      drupal_goto("islandora/object/$apparatus/manage/datastreams/add");
+      drupal_goto("islandora/critical_apparatus/$pid");
+      break;
 
     case 'new_versionable':
       drupal_goto("islandora/object/$pid/manage/collection/ingest");
+      break;
 
     case 'attach_versionable':
       drupal_goto("islandora/critical_edition/$pid/associate");
+      break;
+
+    case 'make_mvd':
+      drupal_goto("islandora/critical_edition/$pid/mvd");
+      break;
   }
 }
 
 /**
- * Attaches and detaches versionable objects from Criitcal Edition object.
+ * Attaches and detaches versionable objects from Critical Edition object.
  *
  * @param array $form
  *   The form

@@ -75,6 +75,15 @@ function islandora_critical_edition_menu() {
     'access arguments' => array(2),
     'file' => 'includes/container_management.inc',
   );
+  $items['islandora/critical_edition/%islandora_object/mvd'] = array(
+    'title' => 'Create MVD',
+    'page callback' => 'islandora_critical_create_mvd',
+    'page arguments' => array(2),
+    'type' => MENU_LOCAL_TASK,
+    'access callback' => 'islandora_critical_edition_container_management_access',
+    'access arguments' => array(2),
+    'file' => 'includes/calliope_interaction.inc',
+  );
   $items['islandora/object/%islandora_object/manage/versionable_object'] = array(
     'title' => 'Versionable Object',
     'page callback' => 'islandora_versionable_object_management_menu',
@@ -94,7 +103,15 @@ function islandora_critical_edition_menu() {
     'access arguments' => array(3),
     'file' => 'includes/transcriptions.inc',
   );
-
+  $items['islandora/critical_apparatus/%islandora_object'] = array(
+    'title' => 'Manage Critical Apparatus',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('critical_apparatus_form',2),
+    'type' => MENU_CALLBACK,
+    'access callback' => 'islandora_critical_edition_container_management_access',
+    'access arguments' => array(2),
+    'file' => 'includes/critical_apparatus.inc',
+  );
   return $items;
 }
 
