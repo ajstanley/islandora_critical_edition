@@ -63,5 +63,6 @@ function islandora_versionable_object_management_menu(AbstractObject $object) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
+
   return $output;
 }

@@ -20,6 +20,7 @@ function islandora_critical_edition_create_transcription_form(array $form, array
   $upload_size = min((int) ini_get('post_max_size'), (int) ini_get('upload_max_filesize'));
   $extensions = array('txt');
   $form = array();
+  $input_types = array();
   $form['transcription'] = array(
     '#type' => 'textfield',
     '#title' => t('Title of new transcription'),
@@ -27,9 +28,26 @@ function islandora_critical_edition_create_transcription_form(array $form, array
     '#default_value' => t('Transcription of') . ' ' . $object->label,
   );
 
-  $form['pid'] = array(
+  $members = islandora_critical_edition_get_members($object->id);
+  $critical_edition = array_search('islandora:criticalEditionCModel', $members);
+  if ($critical_edition) {
+    $input_types['cwrc'] = t('Create transcription from CWRCWRiter object');
+    $form['critical_edition_pid'] = array(
+      '#type' => 'hidden',
+      '#value' => $critical_edition,
+    );
+  }
+  $input_types['none'] = t('Create blank transcription');
+  $input_types['file'] = t('Upload transcription from file');
+
+  $form['versionable_object_pid'] = array(
     '#type' => 'hidden',
     '#value' => $object->id,
+  );
+
+  $form['content_source'] = array(
+    '#type' => 'radios',
+    '#options' => $input_types,
   );
 
   $form['file'] = array(
@@ -41,6 +59,11 @@ function islandora_critical_edition_create_transcription_form(array $form, array
     '#upload_validators' => array(
       'file_validate_extensions' => $extensions,
       'file_validate_size' => array($upload_size * 1024 * 1024),
+    ),
+    '#states' => array(
+      'visible' => array(
+        ':input[name="content_source"]' => array('value' => 'file'),
+      ),
     ),
   );
   $form['submit'] = array(
@@ -59,9 +82,12 @@ function islandora_critical_edition_create_transcription_form(array $form, array
  *   Drupal form_state
  */
 function islandora_critical_edition_create_transcription_form_submit(array $form, array &$form_state) {
-  $pid = $form_state['values']['pid'];
-  $versionable_object = islandora_object_load($pid);
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $versionable_object_pid = $form_state['values']['versionable_object_pid'];
+  $versionable_object = islandora_object_load($versionable_object_pid);
   $label = $form_state['values']['transcription'];
+  $content_source = $form_state['values']['content_source'];
+
   $tuque = new IslandoraTuque();
   $namespace = islandora_get_namespace($versionable_object->id);
   $transcription = $tuque->repository->constructObject($namespace);
@@ -73,13 +99,20 @@ function islandora_critical_edition_create_transcription_form_submit(array $form
   $control_group = "M";
   $transcription_datastream = $transcription->constructDatastream($datastream_id, $control_group);
   $transcription_datastream->mimetype = 'text/plain';
-  if (!empty($form_state['values']['file'])) {
+
+  if ($content_source == 'cwrc') {
+    $critical_edition_pid = $form_state['values']['critical_edition_pid'];
+    add_cwrc_derived_transcription($critical_edition_pid, $versionable_object_pid, $transcription, $transcription_datastream);
+  }
+
+  if ($content_source == 'file') {
     $file = file_load($form_state['values']['file']);
     $path = drupal_realpath($file->uri);
     $transcription_datastream->setContentFromFile($path);
     file_delete($file);
   }
-  else {
+
+  if ($content_source == 'none') {
     $transcription_datastream->setContentFromString(t('No transcription entered.'));
   }
 
@@ -165,7 +198,6 @@ function islandora_critical_edition_manage_transcriptions_form_submit(array $for
   }
 }
 
-
 /**
  * Form to update transcription.
  *
@@ -219,4 +251,81 @@ function islandora_critical_transcription_edit_form_submit($form, $form_state) {
   if ($success) {
     drupal_set_message(t("Transcription updated."));
   }
+}
+
+/**
+ * Adds transcription from CWRC datastreams of CWRCWriter page objects.
+ *
+ * @param String $critical_edition_pid
+ *   PID of Critical Edition
+ * @param String $versionable_object_pid
+ *   PID of Versionable Object
+ * @param AbstractObject $transcription
+ *   Object representing Transcription Object
+ * @param IslandoraFedoraDatastream $transcription_datastream
+ *   Datastream object to be updated
+ */
+function add_cwrc_derived_transcription($critical_edition_pid, $versionable_object_pid, $transcription, $transcription_datastream) {
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $critical_edition_object = islandora_object_load($critical_edition_pid);
+  $pages = array_keys(islandora_paged_content_get_pages($critical_edition_object));
+  $batch = array(
+    'title' => t('Creating Transcription from CWRCWRiter'),
+    'operations' => array(),
+    'file' => drupal_get_path('module', 'islandora_critical_edition') . '/includes/transcriptions.inc',
+    'progress_message' => t('@current of @total pages processed.'),
+  );
+  $flat_pid = islandora_escape_pid_for_function($versionable_object_pid);
+
+  $filename = file_create_filename($flat_pid . "tempcwrc", 'temporary://');
+  foreach ($pages as $page) {
+    $batch['operations'][] = array('islandora_critical_edition_build_text_file', array(
+        'page_object' => islandora_object_load($page),
+        'filename' => $filename));
+  }
+  $batch['operations'][] = array('islandora_transcription_file_add',
+    array(
+      'transcription' => $transcription,
+      'transcription_datastream' => $transcription_datastream,
+      'filename' => $filename));
+  batch_set($batch);
+  batch_process();
+}
+
+/**
+ * Builds temp file with CWRC data from page level objects.
+ *
+ * @param AbstractObject $page_object
+ *   Object representing page
+ * @param String $filename
+ *   Temp file to hold data
+ */
+function islandora_critical_edition_build_text_file($page_object, $filename, &$context) {
+  if ($page_object['CWRC']) {
+    $raw_cwrc = $page_object['CWRC']->content;
+    $cwrc = str_replace('<br />', "\n", $raw_cwrc);
+    $content = new SimpleXMLElement($cwrc);
+    $tei = $content->body;
+    $cleaned_tei = strip_tags($tei->asXML());
+    file_put_contents($filename, $cleaned_tei, FILE_APPEND | LOCK_EX);
+  }
+}
+
+/**
+ * Adds completed file to Transcription Object.
+ *
+ * @param AbstractObject $transcription
+ *   Uningested object representing transcription
+ * @param IslandoraFedoraDatastream $transcription_datastream
+ *   Transcription datastream
+ * @param String $filename
+ *   file to be added
+ */
+function islandora_transcription_file_add($transcription, $transcription_datastream, $filename) {
+  $tuque = new IslandoraTuque();
+  $transcription_datastream->setContentFromFile($filename);
+  unlink($filename);
+  $transcription->ingestDatastream($transcription_datastream);
+  $tuque->repository->ingestObject($transcription);
 }
