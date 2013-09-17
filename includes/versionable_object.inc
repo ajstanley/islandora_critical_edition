@@ -23,13 +23,13 @@ function islandora_versionable_object_management_menu(AbstractObject $object) {
   drupal_set_breadcrumb(islandora_get_breadcrumbs($object));
   drupal_set_title($object->label);
   $members = islandora_critical_edition_get_members($object->id);
-  $critical_edition = array_search('islandora:criticalEditionCModel', $members);
+  $cwrcwriter = array_search('islandora:criticalEditionCModel', $members);
   $transcriptions = array_keys($members, 'islandora:transcriptionCModel');
 
   $output = array();
   $output['manage_pages'] = array('#type' => 'vertical_tabs');
   $output['manage_pages']['create_cwrcwriter'] = array(
-    '#access' => user_access(ISLANDORA_ADD_DS) & !$critical_edition,
+    '#access' => user_access(ISLANDORA_ADD_DS) & !$cwrcwriter,
     '#title' => t('Create CWRCWriter'),
     '#description' => t('Create CWRCWriter object from existing book object'),
     '#type' => 'fieldset',
@@ -56,10 +56,10 @@ function islandora_versionable_object_management_menu(AbstractObject $object) {
   );
 
   $output['manage_pages']['delete_cwrcwriter'] = array(
-    '#access' => user_access(ISLANDORA_ADD_DS) && $critical_edition,
+    '#access' => user_access(ISLANDORA_ADD_DS) && $cwrcwriter,
     '#title' => t('Delete CWRCWriter'),
     '#type' => 'fieldset',
-    'form' => drupal_get_form('islandora_critical_edition_delete_cwrcwriter_form', $object, $critical_edition),
+    'form' => drupal_get_form('islandora_critical_edition_delete_cwrcwriter_form', $object, $cwrcwriter),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );

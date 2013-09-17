@@ -4,7 +4,6 @@
  * @file
  * This module is for managing critical editions of Islandora objects.
  */
-
 define('ISLANDORA_CRITICAL_EDITION_USE_CWRC_WRITER', 'use CWRC');
 define('ISLANDORA_CRITICAL_EDITION_EDIT_WITH_CWRC_WRITER', 'edit CWRC');
 define('ISLANDORA_CRITICAL_EDITION_CREATE_CRITICAL_EDITION', 'create critical edition');
@@ -97,7 +96,7 @@ function islandora_critical_edition_menu() {
   $items['islandora/transcription/edit/%islandora_object'] = array(
     'title' => 'Edit Transcription',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('islandora_critical_transcription_edit_form',3),
+    'page arguments' => array('islandora_critical_transcription_edit_form', 3),
     'type' => MENU_CALLBACK,
     'access callback' => 'islandora_transcription_object_management_access',
     'access arguments' => array(3),
@@ -106,12 +105,13 @@ function islandora_critical_edition_menu() {
   $items['islandora/critical_apparatus/%islandora_object'] = array(
     'title' => 'Manage Critical Apparatus',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('critical_apparatus_form',2),
+    'page arguments' => array('critical_apparatus_form', 2),
     'type' => MENU_CALLBACK,
     'access callback' => 'islandora_critical_edition_container_management_access',
     'access arguments' => array(2),
     'file' => 'includes/critical_apparatus.inc',
   );
+  
   return $items;
 }
 
@@ -486,5 +486,42 @@ function islandora_critical_edition_add_collection_properties($form_state) {
   $apparatus->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:criticalApparatusCModel');
   $apparatus->label = t("Critical Apparatus");
   $apparatus->owner = $fedora_object->owner;
+  $tn_path = drupal_get_path('module', 'islandora_critical_edition') . '/images/apparatus.jpg';
+  $tn = $apparatus->constructDatastream('TN');
+  $tn->label = 'Thumbnail';
+  $tn->setContentFromFile($tn_path);
+  $apparatus->ingestDatastream($tn);
   $tuque->repository->ingestObject($apparatus);
+}
+
+/**
+ * Controls access to management interface.
+ *
+ * @param AbstractObject $object
+ *   Object to be examined
+ * @param String $context
+ *   Determines origin of function call
+ *
+ * @return boolean
+ *   Access to path
+ */
+function islandora_critical_edition_object_management_access($object, $context) {
+  if (is_null($object)) {
+    return FALSE;
+  }
+
+  $content_models = $object->models;
+  $access = FALSE;
+  
+   switch ($context) {
+    case 'manage_apparatus':
+      if (in_array('islandora:criticalApparatusCModel', $content_models)) {
+        $access = TRUE;
+        
+      }
+      break;
+
+  }
+
+  return $access;
 }

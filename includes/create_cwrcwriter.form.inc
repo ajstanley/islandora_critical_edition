@@ -29,6 +29,7 @@ function islandora_critical_edition_associate_book_form(array $form, array &$for
   }
   $books = islandora_critical_edition_get_books();
   $versionable_object_pid = $object->id;
+  $rows = array();
   foreach ($books as $pid => $label) {
     $rows[$pid] = array(
       'pid' => $pid,
@@ -86,6 +87,11 @@ function islandora_critical_edition_associate_book_form_submit(array $form, arra
   $book_object = islandora_object_load($book_pid);
   // Create Critical edition Fedora Object.
   $versionable_object_pid = $form_state['values']['versionable_object_pid'];
+  $versionable_object = islandora_object_load($versionable_object_pid);
+  $tn = $book_object['TN'];
+  if ($tn) {
+    $versionable_object->ingestDatastream($tn);
+  }
   $fedora_object = islandora_critical_edition_create_object(islandora_get_namespace($book_pid), $book_object->label);
 
   $fedora_object->relationships->add(ISLANDORA_RELS_EXT_URI, ISLANDORA_CRITICAL_EDITION_IS_CRITICAL_EDITION_OF, $book_pid, RELS_TYPE_PLAIN_LITERAL);
