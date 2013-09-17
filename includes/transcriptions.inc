@@ -31,7 +31,7 @@ function islandora_critical_edition_create_transcription_form(array $form, array
   $members = islandora_critical_edition_get_members($object->id);
   $critical_edition = array_search('islandora:criticalEditionCModel', $members);
   if ($critical_edition) {
-    $input_types['cwrc'] = t('Create transcription from CWRCWRiter object');
+    $input_types['cwrc'] = t('Create transcription from TEI-RDF Object');
     $form['cwrcwriter'] = array(
       '#type' => 'hidden',
       '#value' => $critical_edition,

@@ -30,8 +30,8 @@ function islandora_versionable_object_management_menu(AbstractObject $object) {
   $output['manage_pages'] = array('#type' => 'vertical_tabs');
   $output['manage_pages']['create_cwrcwriter'] = array(
     '#access' => user_access(ISLANDORA_ADD_DS) & !$cwrcwriter,
-    '#title' => t('Create CWRCWriter'),
-    '#description' => t('Create CWRCWriter object from existing book object'),
+    '#title' => t('Create TEI-RDF Object'),
+    '#description' => t('Create TEI-RDF Object from existing book object'),
     '#type' => 'fieldset',
     'form' => drupal_get_form('islandora_critical_edition_associate_book_form', $object),
     '#collapsible' => TRUE,
@@ -57,7 +57,7 @@ function islandora_versionable_object_management_menu(AbstractObject $object) {
 
   $output['manage_pages']['delete_cwrcwriter'] = array(
     '#access' => user_access(ISLANDORA_ADD_DS) && $cwrcwriter,
-    '#title' => t('Delete CWRCWriter'),
+    '#title' => t('Delete TEI-RDF Object'),
     '#type' => 'fieldset',
     'form' => drupal_get_form('islandora_critical_edition_delete_cwrcwriter_form', $object, $cwrcwriter),
     '#collapsible' => TRUE,

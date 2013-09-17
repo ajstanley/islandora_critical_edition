@@ -7,6 +7,5 @@ dependencies[] = islandora_paged_content
 dependencies[] = islandora_image_annotation
 dependencies[] = islandora_entities
 dependencies[] = repository
-dependencies[] = islandora_repository
 version = 7.x-dev
 core = 7.x
