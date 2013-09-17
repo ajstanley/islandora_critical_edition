@@ -173,7 +173,7 @@ function islandora_critical_edition_manage_transcriptions_form(array $form, arra
   if ($cwrcwriter) {
     $form['cwrc_update'] = array(
       '#type' => 'submit',
-      '#value' => t('Synchronize with CWRCWriter'),
+      '#value' => t('Synchronize with TEI-RDF object'),
       '#attributes' => array('source' => 'cwrc_update', 'class' => array('transcription_submit')),
     );
 
