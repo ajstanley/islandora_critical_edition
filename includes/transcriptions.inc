@@ -37,7 +37,7 @@ function islandora_critical_edition_create_transcription_form(array $form, array
       '#value' => $critical_edition,
     );
   }
-  $input_types['none'] = t('Create blank transcription');
+  $input_types['none'] = t('Create born-digital transcription');
   $input_types['file'] = t('Upload transcription from file');
 
   $form['versionable_object_pid'] = array(
