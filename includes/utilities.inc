@@ -172,7 +172,7 @@ function islandora_critical_apparatus_get_datastreams() {
     'title_page' => t('Title Page'),
     'epigraph' => t('Epigraph'),
     'preface' => t('Preface'),
-    'forewword' => t('Foreword'),
+    'foreword' => t('Foreword'),
     'introduction' => t('Introduction'),
     'illustrations' => t('List of Illustrations, Figures, Graphs'),
     'acknowledgements' => t('Acknowledgements'),
