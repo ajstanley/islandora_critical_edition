@@ -73,7 +73,7 @@ function islandora_critical_edition_container_management_submit(array $form, arr
 
   switch ($action) {
     case 'populate':
-      drupal_goto("islandora/critical_apparatus/$pid");
+      drupal_goto("islandora/critical_apparatus/manage/$pid");
       break;
 
     case 'new_versionable':
