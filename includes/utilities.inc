@@ -160,3 +160,28 @@ function islandora_critical_get_related_transcriptions($versionable_object_pid) 
   }
   return $objects;
 }
+
+/**
+ * Returns array of possible apparatus datastreams.
+ *
+ * @return array
+ *   Associative array of dsid => label
+ */
+function islandora_critical_apparatus_get_datastreams() {
+  return array(
+    'title_page' => t('Title Page'),
+    'epigraph' => t('Epigraph'),
+    'preface' => t('Preface'),
+    'forewword' => t('Foreword'),
+    'introduction' => t('Introduction'),
+    'illustrations' => t('List of Illustrations, Figures, Graphs'),
+    'acknowledgements' => t('Acknowledgements'),
+    'editorial_introduction' => t('Editorial Introduction'),
+    'headnote' => t('Headnote'),
+    'footnote' => t('Footnotes'),
+    'endnotes' => t('Endnotes'),
+    'epilogue' => t('Epilogue'),
+    'afterword' => t('Afterword'),
+    'editorial_procedure' => t('Editorial Procedure'),
+  );
+}

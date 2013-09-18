@@ -18,13 +18,11 @@
  * @return array
  *   Drupal form
  */
-function critical_apparatus_form($form, $form_state, $critical_edition) {
+function critical_apparatus_form($form, $form_state, $apparatus) {
   module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
   module_load_include('inc', 'islandora', 'includes/breadcrumb');
-  $apparatus_pid = key(islandora_critical_edition_get_members($critical_edition->id, 'islandora:criticalApparatusCModel'));
-  $apparatus = islandora_object_load($apparatus_pid);
-  drupal_set_breadcrumb(islandora_get_breadcrumbs($critical_edition));
-  drupal_set_title($critical_edition->label);
+  drupal_set_breadcrumb(islandora_get_breadcrumbs($apparatus));
+  drupal_set_title($apparatus->label);
   $datastreams = islandora_critical_apparatus_get_datastreams();
   $content = "Choose datastream";
   $chosen = isset($form_state['values']['datastream']) ? $form_state['values']['datastream'] : 'title_page';
@@ -37,7 +35,7 @@ function critical_apparatus_form($form, $form_state, $critical_edition) {
   $form = array();
   $form['pid'] = array(
     '#type' => 'hidden',
-    '#value' => $apparatus_pid,
+    '#value' => $apparatus->id,
   );
 
   $form['datastream'] = array(
@@ -89,31 +87,6 @@ function datastream_ajax_callback($form, $form_state) {
 }
 
 /**
- * Returns array of possible datastreams.
- *
- * @return array
- *   Associative array of dsid => label
- */
-function islandora_critical_apparatus_get_datastreams() {
-  return array(
-    'title_page' => t('Title Page'),
-    'epigraph' => t('Epigraph'),
-    'preface' => t('Preface'),
-    'forewword' => t('Foreword'),
-    'introduction' => t('Introduction'),
-    'illustrations' => t('List of Illustrations, Figures, Graphs'),
-    'acknowledgements' => t('Acknowledgements'),
-    'editorial_introduction' => t('Editorial Introduction'),
-    'headnote' => t('Headnote'),
-    'footnote' => t('Footnotes'),
-    'endnotes' => t('Endnotes'),
-    'epilogue' => t('Epilogue'),
-    'afterword' => t('Afterword'),
-    'editorial_procedure' => t('Editorial Procedure'),
-  );
-}
-
-/**
  * Submit handler for apparatus form.
  *
  * @param array $form
@@ -122,6 +95,8 @@ function islandora_critical_apparatus_get_datastreams() {
  *   Drupal form state
  */
 function critical_apparatus_form_submit($form, $form_state) {
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
+  $datastreams = islandora_critical_apparatus_get_datastreams();
   $apparatus = islandora_object_load($form_state['values']['pid']);
   $chosen = $form_state['values']['datastream'];
   $content = $form_state['values'][$chosen];
@@ -135,4 +110,5 @@ function critical_apparatus_form_submit($form, $form_state) {
     $datastream->mimetype = 'text/plain';
     $apparatus->ingestDatastream($datastream);
   }
+  drupal_set_message(t("Updated @ds", array('@ds' => $datastreams[$chosen])));
 }

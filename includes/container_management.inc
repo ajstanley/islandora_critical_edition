@@ -40,11 +40,7 @@ function islandora_critical_edition_container_management(array $form, array &$fo
     '#value' => t('Attach Versionable Object to Critical Edition'),
     '#attributes' => array('source' => 'attach_versionable', 'class' => array('critical_edition_submit')),
   );
-  $form['populate'] = array(
-    '#type' => 'submit',
-    '#value' => t('Populate Critical Paratext'),
-    '#attributes' => array('source' => 'populate', 'class' => array('critical_edition_submit')),
-  );
+
   if (!empty($transcriptions)) {
     $form['mvd'] = array(
       '#type' => 'submit',
@@ -72,9 +68,6 @@ function islandora_critical_edition_container_management_submit(array $form, arr
   $pid = $form_state['values']['pid'];
 
   switch ($action) {
-    case 'populate':
-      drupal_goto("islandora/critical_apparatus/manage/$pid");
-      break;
 
     case 'new_versionable':
       drupal_goto("islandora/object/$pid/manage/collection/ingest");

@@ -145,3 +145,11 @@ function islandora_critical_edition_preprocess_islandora_critical_edition(&$vari
   // 
   // Critical Editions requires its own js init script.
 }
+
+function islandora_critical_edition_preprocess_islandora_critical_apparatus(&$variables) {
+  // Local Critical Editions module path.
+  $critical_edition_module_path = drupal_get_path('module', 'islandora_critical_edition');
+  drupal_add_css($critical_edition_module_path . "/css/jquery-ui.css");
+  drupal_add_js($critical_edition_module_path . '/CWRC-Writer/src/js/lib/jquery/jquery-1.8.3.js');
+  drupal_add_js($critical_edition_module_path . "/CWRC-Writer/src/js/lib/jquery/jquery-ui-1.9.0.custom.min.js");
+}
