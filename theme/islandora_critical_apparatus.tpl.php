@@ -1,14 +1,14 @@
 <?php
 /**
  * @file
- * islandora-basic-collection.tpl.php
+ * template for critical apparatus
  *
  */
 $object = $variables['islandora_object'];
 module_load_include('inc', 'islandora', 'includes/breadcrumb');
 drupal_set_breadcrumb(islandora_get_breadcrumbs($object));
 drupal_set_title($object->label);
-$datastreams = islandora_critical_apparatus_get_datastreams();
+$datastreams = $variables['datastreams'];
 $dsids = array_keys($datastreams);
 $dsids_to_display = array();
 foreach ($dsids as $dsid) {

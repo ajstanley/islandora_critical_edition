@@ -148,6 +148,8 @@ function islandora_critical_edition_preprocess_islandora_critical_edition(&$vari
 
 function islandora_critical_edition_preprocess_islandora_critical_apparatus(&$variables) {
   module_load_include('inc', 'islandora_image_annotation', 'includes/utils');
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
+  $variables['datastreams'] = islandora_critical_apparatus_get_datastreams();
   islandora_image_annotation_include_common_css();
   $critical_edition_module_path = drupal_get_path('module', 'islandora_critical_edition');
   drupal_add_js($critical_edition_module_path . '/CWRC-Writer/src/js/lib/jquery/jquery-1.8.3.js');
