@@ -12,6 +12,7 @@ define('ISLANDORA_CRITICAL_EDITION_VIEW_CRITICAL_EDITION', 'view critical editio
 define('ISLANDORA_CRITICAL_EDITION_EDIT_TRANSCRIPTIONS', 'edit transcriptions');
 define('ISLANDORA_CRITICAL_EDITION_CREATE_VERSIONABLE_OBJECT', 'create versionable object');
 define('ISLANDORA_CRITICAL_EDITION_ATTACH_VERSIONABLE_OBJECT', 'attach versionable object');
+define('ISLANDORA_CRITICAL_EDITION_CREATE_MVD', 'create mvd');
 // Relationships.
 define('ISLANDORA_CRITICAL_EDITION_IS_CRITICAL_EDITION_OF', 'isCriticalEditionOf');
 
@@ -90,8 +91,8 @@ function islandora_critical_edition_menu() {
     'page callback' => 'islandora_critical_create_mvd',
     'page arguments' => array(2),
     'type' => MENU_LOCAL_TASK,
-    'access callback' => 'islandora_critical_edition_container_management_access',
-    'access arguments' => array(2),
+    'access callback' => 'user_access',
+    'access arguments' => array(ISLANDORA_CRITICAL_EDITION_CREATE_MVD),
     'file' => 'includes/calliope_interaction.inc',
   );
 
@@ -225,6 +226,10 @@ function islandora_critical_edition_permission() {
     ISLANDORA_CRITICAL_EDITION_ATTACH_VERSIONABLE_OBJECT  => array(
       'title' => t('Attach Versionable Object'),
       'description' => t('Attach existing Versionable object as a member of the Critical Edition.'),
+    ),
+    ISLANDORA_CRITICAL_EDITION_CREATE_MVD => array(
+      'title' => t('Create MVD'),
+      'description' => t('Create Multi Version Document from transcriptions.'),
     ),
   );
 }
