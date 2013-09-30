@@ -146,6 +146,9 @@ function islandora_critical_edition_preprocess_islandora_critical_edition(&$vari
   // Critical Editions requires its own js init script.
 }
 
+/**
+ * Implements hook_preprocess_islandora_critical_edition().
+ */
 function islandora_critical_edition_preprocess_islandora_critical_apparatus(&$variables) {
   module_load_include('inc', 'islandora_image_annotation', 'includes/utils');
   module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
@@ -154,4 +157,18 @@ function islandora_critical_edition_preprocess_islandora_critical_apparatus(&$va
   $critical_edition_module_path = drupal_get_path('module', 'islandora_critical_edition');
   drupal_add_js($critical_edition_module_path . '/CWRC-Writer/src/js/lib/jquery/jquery-1.8.3.js');
   drupal_add_js($critical_edition_module_path . "/CWRC-Writer/src/js/lib/jquery/jquery-ui-1.9.0.custom.min.js");
+}
+
+/**
+ * Implements hook_preprocess_islandora_critical_edition().
+ */
+
+function islandora_critical_edition_preprocess_islandora_critical_edition_container(&$variables) {
+  $path = drupal_get_path('module', 'islandora_critical_edition');
+  drupal_add_css("$path/css/critical_edition_container.css");
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
+  $members = islandora_critical_edition_get_members($variables['islandora_object']->id);
+  $apparatus = array_keys($members, 'islandora:criticalApparatusCModel');
+  $variables['apparatus'] = array_keys($members, 'islandora:criticalApparatusCModel');
+  $variables['versionable_objects'] = array_keys($members, 'islandora:versionableObjectCModel');
 }

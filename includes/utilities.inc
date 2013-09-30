@@ -84,7 +84,6 @@ function islandora_critical_edition_add_cwrc_datastream(AbstractObject $fedora_o
   $fedora_object->ingestDatastream($cwrc_datastream);
 }
 
-
 /**
  * Returns associated objects.
  *

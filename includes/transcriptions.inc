@@ -216,7 +216,7 @@ function islandora_critical_edition_manage_transcriptions_form_submit(array $for
 
     case 'cwrc_update':
       $cwrcwriter = $form_state['values']['cwrcwriter'];
-      islandora_update_from_cwrc($cwrcwriter, $transcription_pid);
+      islandora_update_from_TEI_RDF_object($cwrcwriter, $transcription_pid);
       break;
   }
 }
@@ -269,7 +269,7 @@ function islandora_critical_transcription_edit_form_submit($form, $form_state) {
     $success = $transcription_object['TRANSCRIPTION']->content = $form_state['values']['transcription'];
   }
   catch (Exception $exc) {
-    echo $exc->getTraceAsString();
+    watchdog("islandora critical edition",  $exc->getTraceAsString());
   }
   if ($success) {
     drupal_set_message(t("Transcription updated."));
@@ -328,10 +328,8 @@ function islandora_critical_edition_build_text_file($page_object, $filename) {
   if ($page_object['CWRC']) {
     $raw_cwrc = $page_object['CWRC']->content;
     $cwrc = str_replace('<br />', "\n", $raw_cwrc);
-    $content = new SimpleXMLElement($cwrc);
-    $tei = $content->body;
-    $cleaned_tei = strip_tags($tei->asXML());
-    file_put_contents($filename, $cleaned_tei, FILE_APPEND | LOCK_EX);
+    $cleaned_text = strip_tags($cwrc);
+    file_put_contents($filename, $cleaned_text, FILE_APPEND | LOCK_EX);
   }
 }
 
@@ -353,21 +351,28 @@ function islandora_transcription_file_add($transcription, $transcription_datastr
   $tuque->repository->ingestObject($transcription);
 }
 
-function islandora_update_from_cwrc($cwrcwriter, $transcription_pid) {
+/**
+ * Populates transcription with current text from TEI-RDF object
+ *
+ * @param String $TEI_RDF_object_pid
+ *   PID of RDF-TEI Object
+ * @param String $transcription_pid
+ *   PID of Transcription Object being updated
+ */
+function islandora_update_from_TEI_RDF_object($TEI_RDF_object_pid, $transcription_pid) {
   module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
   module_load_include('inc', 'islandora', 'includes/utilities');
-  $cwrcwriter_object = islandora_object_load($cwrcwriter);
+  $TEI_RDF_object = islandora_object_load($TEI_RDF_object_pid);
   $transcription = islandora_object_load($transcription_pid);
-  $pages = array_keys(islandora_paged_content_get_pages($cwrcwriter_object));
+  $pages = array_keys(islandora_paged_content_get_pages($TEI_RDF_object));
     $batch = array(
-    'title' => t('Creating Transcription from CWRCWRiter'),
+    'title' => t('Creating Transcription from TEI-RDF Object'),
     'operations' => array(),
     'file' => drupal_get_path('module', 'islandora_critical_edition') . '/includes/transcriptions.inc',
     'progress_message' => t('@current of @total pages processed.'),
   );
     
   $flat_pid = islandora_escape_pid_for_function($transcription_pid);
-
   $filename = file_create_filename($flat_pid . "tempcwrc", 'temporary://');
   foreach ($pages as $page) {
     $batch['operations'][] = array('islandora_critical_edition_build_text_file', array(

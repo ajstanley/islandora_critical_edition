@@ -70,7 +70,7 @@ function islandora_critical_edition_container_management_submit(array $form, arr
   switch ($action) {
 
     case 'new_versionable':
-      drupal_goto("islandora/object/$pid/manage/collection/ingest");
+      drupal_goto("islandora/critical_edition/$pid/create/versionable_object");
       break;
 
     case 'attach_versionable':

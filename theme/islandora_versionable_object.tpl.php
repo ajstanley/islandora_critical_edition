@@ -12,9 +12,9 @@ drupal_set_breadcrumb(islandora_get_breadcrumbs($object));
 drupal_set_title($object->label);
 ?>
 
-<div class="islandora_cwrcwriter_object">
+<div class="islandora_tei_editor_object">
   <?php if (!$critical_edition  && empty($transcriptions)): ?>
-    <?php print t("This Verionable object has no associated objects."); ?>
+    <?php print t("This Versionable Object has no associated objects."); ?>
   <?php endif; ?>
   <?php if ($critical_edition): ?>
     <?php print l($edition_object->label, "islandora/object/${critical_edition}"); ?>

@@ -2,11 +2,11 @@
 
 /**
  * @file
- * Handles the association of a CwrcWriter object.
+ * Handles the association of a TEI-RDF object.
  */
 
 /**
- * The form for associating a CWRCWriter object.
+ * The form for associating a TEI-RDF object.
  *
  * @param array $form
  *   The Drupal form definition.
@@ -27,8 +27,18 @@ function islandora_critical_edition_associate_book_form(array $form, array &$for
     );
     return $form;
   }
-  $books = islandora_critical_edition_get_books();
-  $versionable_object_pid = $object->id;
+  
+  $tuque = islandora_get_tuque_connection();
+  $repository = $tuque->repository;
+  $total = $repository->ri->countQuery(islandora_critical_edition_get_book_query(0), 'sparql');
+  $limit = 25;
+  if ($total < 28) {
+    $limit = $total;
+  }
+  $current_page = pager_default_initialize($total, $limit);
+  $offset = $current_page * $limit;
+  
+  $books = islandora_critical_edition_get_books($offset);
   $rows = array();
   foreach ($books as $pid => $label) {
     $rows[$pid] = array(
@@ -56,7 +66,7 @@ function islandora_critical_edition_associate_book_form(array $form, array &$for
   $form['book_objects'] = $book_element;
   $form['next'] = array(
     '#type' => 'submit',
-    '#value' => t('Create CWRCWriter'),
+    '#value' => t('Create TEI-RDF Object'),
   );
   $form['versionable_object_pid'] = array(
     '#type' => 'hidden',
@@ -90,7 +100,12 @@ function islandora_critical_edition_associate_book_form_submit(array $form, arra
   $versionable_object = islandora_object_load($versionable_object_pid);
   $tn = $book_object['TN'];
   if ($tn) {
-    $versionable_object->ingestDatastream($tn);
+    if ($versionable_object['TN']) {
+      $versionable_object['TN']->content = $tn->content;
+    }
+    else {
+      $versionable_object->ingestDatastream($tn);
+    }
   }
   $fedora_object = islandora_critical_edition_create_object(islandora_get_namespace($book_pid), $book_object->label);
 
@@ -102,7 +117,7 @@ function islandora_critical_edition_associate_book_form_submit(array $form, arra
   $pages = islandora_paged_content_get_pages($book_object);
 
   $batch = array(
-    'title' => t('Creating New CWRCWriter'),
+    'title' => t('Creating New TEI-RDF Object'),
     'operations' => array(),
     'file' => drupal_get_path('module', 'islandora_critical_edition') . '/includes/create.inc',
     'progress_message' => t('@current of @total pages created.'),
@@ -124,20 +139,12 @@ function islandora_critical_edition_associate_book_form_submit(array $form, arra
  * @return array
  *   array of PID => Label pairs
  */
-function islandora_critical_edition_get_books() {
+function islandora_critical_edition_get_books($offset = 0, $limit = 'unlimited') {
   module_load_include('inc', 'islandora', 'includes/utilities');
   $tuque = islandora_get_tuque_connection();
-  $query = "PREFIX fm: <info:fedora/fedora-system:def/model#>
-                SELECT DISTINCT ?subject ?label FROM <#ri>
-                WHERE {
-                        {?subject fm:hasModel <info:fedora/islandora:bookCModel>;
-                       }
-                 OPTIONAL{
-                           ?subject fm:label  ?label; 
-                          }
-                       }";
+  $query = islandora_critical_edition_get_book_query($offset);
   $books = array();
-  $results = $tuque->repository->ri->sparqlQuery($query, 'unlimited');
+  $results = $tuque->repository->ri->sparqlQuery($query, $limit);
   foreach ($results as $result) {
     $books[$result['subject']['value']] = $result['label']['value'];
   }
@@ -154,7 +161,7 @@ function islandora_critical_edition_get_books() {
  */
 function islandora_critical_edition_delete_cwrcwriter_form(array $form, array &$form_state, AbstractObject $object, $critical_edition) {
   $form_state['critical_edition_pid'] = $critical_edition;
-  return confirm_form($form, $object->label, "islandora/object/$object->id", t("Are you sure you want to delete %title? !break This action cannot be undone.", array('%title' => $object->label, '!break' => "<br />")), t('Delete CWRCWriter'), t('Cancel')
+  return confirm_form($form, $object->label, "islandora/object/$object->id", t("Are you sure you want to delete %title? !break This action cannot be undone.", array('%title' => $object->label, '!break' => "<br />")), t('Delete TEI-RDF Object'), t('Cancel')
   );
 }
 
@@ -175,4 +182,23 @@ function islandora_critical_edition_delete_cwrcwriter_form_submit($form, $form_s
     $temp = islandora_object_load($pid);
     $temp->state = "D";
   }
+}
+
+/**
+ * Builds and returns query to get all book objects in repository.
+ * @param type $offset
+ * @return type
+ */
+function islandora_critical_edition_get_book_query($offset) {
+    $query = "PREFIX fm: <info:fedora/fedora-system:def/model#>
+                SELECT DISTINCT ?subject ?label FROM <#ri>
+                WHERE {
+                        {?subject fm:hasModel <info:fedora/islandora:bookCModel>;
+                       }
+                 OPTIONAL{
+                           ?subject fm:label  ?label; 
+                          }
+                       }
+            ORDER BY ?label OFFSET $offset";
+    return $query;
 }
