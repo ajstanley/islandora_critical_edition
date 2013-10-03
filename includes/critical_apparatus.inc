@@ -59,7 +59,8 @@ function critical_apparatus_form($form, $form_state, $apparatus) {
 
   $form['wrapper'][$chosen] = array(
     '#title' => t('Enter text'),
-    '#type' => 'textarea',
+    '#type' => 'text_format',
+    '#base_type' => 'textarea',
     '#default_value' => $content,
   );
 

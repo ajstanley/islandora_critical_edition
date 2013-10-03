@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * islandora-basic-collection.tpl.php
+ * islandora_versionable_object.tpl.php
  */
 $object = $variables['islandora_object'];
 $members = $variables['members'];

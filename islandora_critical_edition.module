@@ -58,10 +58,19 @@ function islandora_critical_edition_menu() {
     'file' => 'includes/callbacks.inc',
   );
   // Add new menu items to reflect new architecture.
+//  $items['islandora/object/%islandora_object/manage/edition_container'] = array(
+//    'title' => 'Critical Edition',
+//    'page callback' => 'drupal_get_form',
+//    'page arguments' => array('islandora_critical_edition_container_management', 2),
+//    'type' => MENU_LOCAL_TASK,
+//    'access callback' => 'islandora_critical_edition_object_management_access',
+//    'access arguments' => array(2, 'manage_container'),
+//    'file' => 'includes/container_management.inc',
+//  );
   $items['islandora/object/%islandora_object/manage/edition_container'] = array(
     'title' => 'Critical Edition',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('islandora_critical_edition_container_management', 2),
+    'page callback' => 'islandora_critical_edition_management_menu',
+    'page arguments' => array(2),
     'type' => MENU_LOCAL_TASK,
     'access callback' => 'islandora_critical_edition_object_management_access',
     'access arguments' => array(2, 'manage_container'),

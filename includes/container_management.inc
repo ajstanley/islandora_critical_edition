@@ -41,6 +41,12 @@ function islandora_critical_edition_container_management(array $form, array &$fo
     '#attributes' => array('source' => 'attach_versionable', 'class' => array('critical_edition_submit')),
   );
 
+  $form['include_tei_rdf'] = array(
+    '#type' => 'submit',
+    '#value' => t('Include RDF-TEI Object'),
+    '#attributes' => array('source' => 'include_rdf', 'class' => array('critical_edition_submit')),
+  );
+
   if (!empty($transcriptions)) {
     $form['mvd'] = array(
       '#type' => 'submit',
@@ -101,15 +107,15 @@ function islandora_critical_edition_attach_versionable(array $form, array &$form
   $objects = islandora_get_versionable_objects();
   $chosen = array_keys(islandora_critical_edition_get_members($object->id, 'islandora:versionableObjectCModel'));
   $comparator = function ($a, $b) use ($chosen) {
-    $a_val = $b_val = 0;
-    if (in_array($a, $chosen)) {
-      $a_val = 1;
-    }
-    if (in_array($b, $chosen)) {
-      $b_val = 1;
-    }
-    return $b_val - $a_val;
-  };
+        $a_val = $b_val = 0;
+        if (in_array($a, $chosen)) {
+          $a_val = 1;
+        }
+        if (in_array($b, $chosen)) {
+          $b_val = 1;
+        }
+        return $b_val - $a_val;
+      };
   uksort($objects, $comparator);
   $rows = array();
   $defaults = array();
@@ -245,4 +251,88 @@ function islandora_get_associated_versionable_objects($critical_edition_pid) {
     $objects[] = $result['subject']['value'];
   }
   return $objects;
+}
+
+/**
+ * Displays the versionable object forms in a set of vertical tabs.
+ *
+ * @param AbstractObject $object
+ *   The versionable object to manage.
+ *
+ * @return array
+ *   A renderable array containing all the management forms related to
+ *   versionable objects.
+ */
+function islandora_critical_edition_management_menu(AbstractObject $object) {
+  module_load_include('inc', 'islandora', 'includes/breadcrumb');
+  module_load_include('inc', 'islandora_critical_edition', 'includes/manage_rdf_tei_attachment.form');
+  module_load_include('inc', 'islandora_critical_edition', 'includes/transcriptions');
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
+  module_load_include('inc', 'islandora_critical_edition', 'includes/versionable_object_creation.form');
+  drupal_set_breadcrumb(islandora_get_breadcrumbs($object));
+  drupal_set_title($object->label);
+  $members = islandora_critical_edition_get_members($object->id);
+  $cwrcwriter = array_search('islandora:criticalEditionCModel', $members);
+  $transcriptions = array_keys($members, 'islandora:transcriptionCModel');
+
+  $output = array();
+  $output['manage_critical_edition'] = array('#type' => 'vertical_tabs');
+  $output['manage_critical_edition']['create_vo'] = array(
+    '#access' => user_access(ISLANDORA_ADD_DS),
+    '#title' => t('Create new Versionable Object'),
+    '#description' => t('Create Versionable object and associate it with this Critical Edition'),
+    '#type' => 'fieldset',
+    'form' => drupal_get_form('islandora_critical_edition_create_versionable_object', $object),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $output['manage_critical_edition']['attach_vo'] = array(
+    '#access' => user_access(ISLANDORA_ADD_DS),
+    '#title' => t('Associate existing Versionable Object'),
+    '#description' => t('Associate existing Versionable Object with this Critical Edition'),
+    '#type' => 'fieldset',
+    'form' => drupal_get_form('islandora_critical_edition_attach_versionable', $object),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $output['manage_critical_edition']['attach_tei_rdf'] = array(
+    '#access' => user_access(ISLANDORA_ADD_DS),
+    '#title' => t('Associate TEI-RDF Object'),
+    '#description' => t('Associate existing TEI-RDF Object from repository'),
+    '#type' => 'fieldset',
+    'form' => drupal_get_form('islandora_critical_edition_associate_tei_rdf_form', $object),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $output['manage_critical_edition']['attach_partial_tei_rdf'] = array(
+    '#access' => user_access(ISLANDORA_ADD_DS),
+    '#title' => t('Create TEI-RDF Object from existing object'),
+    '#description' => t('Create new RDF-TEI object as a full or partial subset on an existing object.'),
+    '#type' => 'fieldset',
+    'form' => drupal_get_form('islandora_critical_edition_associate_tei_rdf_form', $object),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  if ($cwrcwriter) {
+    $output['manage_critical_edition']['add_transcription'] = array(
+      '#access' => user_access(ISLANDORA_ADD_DS),
+      '#title' => t('Create Transcription'),
+      '#type' => 'fieldset',
+      'form' => drupal_get_form('islandora_critical_edition_create_transcription_form', $object),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+  }
+  if ($transcriptions) {
+    $output['manage_critical_edition']['manage_transcription'] = array(
+      '#access' => user_access(ISLANDORA_ADD_DS) && $transcriptions,
+      '#title' => t('Manage Transcriptions'),
+      '#type' => 'fieldset',
+      'form' => drupal_get_form('islandora_critical_edition_manage_transcriptions_form', $object),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+  }
+
+  return $output;
 }

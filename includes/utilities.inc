@@ -184,3 +184,40 @@ function islandora_critical_apparatus_get_datastreams() {
     'editorial_procedure' => t('Editorial Procedure'),
   );
 }
+
+/**
+ * Returns all specified objects in the Fedora Repository.
+ *
+ * @return array
+ *   array of PID => Label pairs
+ */
+function islandora_critical_edition_get_related_objects($content_model, $offset = 0, $limit = 'unlimited') {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $tuque = islandora_get_tuque_connection();
+  $query = islandora_critical_edition_get_associated_objects_query($content_model, $offset);
+  $objects = array();
+  $results = $tuque->repository->ri->sparqlQuery($query, $limit);
+  foreach ($results as $result) {
+    $objects[$result['subject']['value']] = $result['label']['value'];
+  }
+  return $objects;
+}
+
+/**
+ * Builds and returns query to get all book objects in repository.
+ * @param type $offset
+ * @return type
+ */
+function islandora_critical_edition_get_associated_objects_query($content_model, $offset) {
+  $query = "PREFIX fm: <info:fedora/fedora-system:def/model#>
+                SELECT DISTINCT ?subject ?label FROM <#ri>
+                WHERE {
+                        {?subject fm:hasModel <info:fedora/$content_model>;
+                       }
+                 OPTIONAL{
+                           ?subject fm:label  ?label; 
+                          }
+                       }
+            ORDER BY ?label OFFSET $offset";
+  return $query;
+}

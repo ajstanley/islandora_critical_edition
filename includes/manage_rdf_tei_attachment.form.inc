@@ -14,31 +14,9 @@
  *   The Drupal form state.
  */
 function islandora_critical_edition_associate_book_form(array $form, array &$form_state, AbstractObject $object) {
-  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
-  drupal_set_breadcrumb(islandora_get_breadcrumbs($object));
-  drupal_set_title($object->label);
-  $has_critical_edition = FALSE;
-  $members = islandora_critical_edition_get_members($object->id);
-  if (array_search('islandora:criticalEditionCModel', $members)) {
-    $has_critical_edition = TRUE;
-    $form['intro'] = array(
-      '#type' => 'markup',
-      '#markup' => t("You may only have a single CWRCwriter associated with a Versionable Object"),
-    );
-    return $form;
-  }
-  
-  $tuque = islandora_get_tuque_connection();
-  $repository = $tuque->repository;
-  $total = $repository->ri->countQuery(islandora_critical_edition_get_book_query(0), 'sparql');
-  $limit = 25;
-  if ($total < 28) {
-    $limit = $total;
-  }
-  $current_page = pager_default_initialize($total, $limit);
-  $offset = $current_page * $limit;
-  
-  $books = islandora_critical_edition_get_books($offset);
+  $content_model = 'islandora:bookCModel';
+  $offset = islandora_critical_edition_prep_form($object, $content_model);
+  $books = islandora_critical_edition_get_related_objects($content_model, $offset);
   $rows = array();
   foreach ($books as $pid => $label) {
     $rows[$pid] = array(
@@ -59,11 +37,20 @@ function islandora_critical_edition_associate_book_form(array $form, array &$for
     '#js' => FALSE,
     '#multiple' => FALSE,
   );
+  $form['pager'] = array(
+    '#type' => 'markup',
+    '#markup' => theme('pager', array('quantity', count($rows))),
+  );
   $form['intro'] = array(
     '#type' => 'markup',
     '#markup' => t('Choose source book object.'),
   );
   $form['book_objects'] = $book_element;
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Enter title for TEI-RDF object'),
+    '#required' => TRUE,
+  );
   $form['next'] = array(
     '#type' => 'submit',
     '#value' => t('Create TEI-RDF Object'),
@@ -72,6 +59,7 @@ function islandora_critical_edition_associate_book_form(array $form, array &$for
     '#type' => 'hidden',
     '#value' => $object->id,
   );
+
   return $form;
   $form = array();
 }
@@ -107,7 +95,7 @@ function islandora_critical_edition_associate_book_form_submit(array $form, arra
       $versionable_object->ingestDatastream($tn);
     }
   }
-  $fedora_object = islandora_critical_edition_create_object(islandora_get_namespace($book_pid), $book_object->label);
+  $fedora_object = islandora_critical_edition_create_object(islandora_get_namespace($book_pid), $form_state['values']['title']);
 
   $fedora_object->relationships->add(ISLANDORA_RELS_EXT_URI, ISLANDORA_CRITICAL_EDITION_IS_CRITICAL_EDITION_OF, $book_pid, RELS_TYPE_PLAIN_LITERAL);
   $fedora_object->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:criticalEditionCModel');
@@ -131,24 +119,6 @@ function islandora_critical_edition_associate_book_form_submit(array $form, arra
 
   batch_set($batch);
   batch_process();
-}
-
-/**
- * Returns all book objects in the Fedora Repository.
- *
- * @return array
- *   array of PID => Label pairs
- */
-function islandora_critical_edition_get_books($offset = 0, $limit = 'unlimited') {
-  module_load_include('inc', 'islandora', 'includes/utilities');
-  $tuque = islandora_get_tuque_connection();
-  $query = islandora_critical_edition_get_book_query($offset);
-  $books = array();
-  $results = $tuque->repository->ri->sparqlQuery($query, $limit);
-  foreach ($results as $result) {
-    $books[$result['subject']['value']] = $result['label']['value'];
-  }
-  return $books;
 }
 
 /**
@@ -184,21 +154,90 @@ function islandora_critical_edition_delete_cwrcwriter_form_submit($form, $form_s
   }
 }
 
+
 /**
- * Builds and returns query to get all book objects in repository.
- * @param type $offset
- * @return type
+ * Form to associate existing TEI-RDF object with Versionable Object
+ *
+ * @param array $form
+ *   Drupal form
+ * @param array $form_state
+ *   Drupal form_state
+ * @param AbstractObject $object
+ *   Object representing the Versionable Object
+ *
+ * @return array
+ *   
  */
-function islandora_critical_edition_get_book_query($offset) {
-    $query = "PREFIX fm: <info:fedora/fedora-system:def/model#>
-                SELECT DISTINCT ?subject ?label FROM <#ri>
-                WHERE {
-                        {?subject fm:hasModel <info:fedora/islandora:bookCModel>;
-                       }
-                 OPTIONAL{
-                           ?subject fm:label  ?label; 
-                          }
-                       }
-            ORDER BY ?label OFFSET $offset";
-    return $query;
+function islandora_critical_edition_associate_tei_rdf_form($form, $form_state, $object) {
+  $content_model = 'islandora:criticalEditionCModel';
+  $object_models = $object->models;
+  $system = array_search("fedora-system:FedoraObject-3.0", $object_models);
+  unset ($object_models[$system]);
+  $object_model = array_shift($object_models);
+  $offset = islandora_critical_edition_prep_form($object, $content_model);
+  $name_mappings = array(
+    'islandora:criticalEditionContainerCModel' => t('Critical Edition'),
+    'islandora:versionableObjectCModel' => t('Versionable Object'),
+  );
+  $tei_rdfs = islandora_critical_edition_get_related_objects($content_model, $offset);
+  $rows = array();
+  foreach ($tei_rdfs as $pid => $label) {
+    $rows[$pid] = array(
+      'pid' => $pid,
+      'title' => $label,
+    );
+  }
+  $header = array(
+    'title' => array('data' => t('TEI-RDF Object')),
+    'pid' => array('data' => t('PID')),
+  );
+  // Build and return table element.
+  $element = array(
+    '#type' => 'tableselect',
+    '#header' => $header,
+    '#options' => $rows,
+    '#empty' => t("There are no RDF-TEI Objects in this Fedora Repository."),
+    '#js' => FALSE,
+    '#multiple' => FALSE,
+  );
+
+  $form['pager'] = array(
+    '#type' => 'markup',
+    '#markup' => theme('pager', array('quantity', count($rows))),
+  );
+  $form['intro'] = array(
+    '#type' => 'markup',
+    '#markup' => t("Choose RDF-TEI object to associate with this @label.", array ('@label' => $name_mappings[$object_model])),
+  );
+  $form['tei_rdf_objects'] = $element;
+  $form['next'] = array(
+    '#type' => 'submit',
+    '#value' => t('Associate TEI-RDF Object'),
+  );
+  $form['versionable_object_pid'] = array(
+    '#type' => 'hidden',
+    '#value' => $object->id,
+  );
+  return $form;
+  $form = array();
+}
+
+function islandora_critical_edition_prep_form($object, $content_model) {
+  module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
+  drupal_set_breadcrumb(islandora_get_breadcrumbs($object));
+  drupal_set_title($object->label);
+  $offset = 0;
+  $tuque = islandora_get_tuque_connection();
+  $repository = $tuque->repository;
+  $total = $repository->ri->countQuery(islandora_critical_edition_get_associated_objects_query($content_model, 0), 'sparql');
+  $limit = 25;
+  if ($total < 28) {
+    $limit = $total;
+  }
+  if ($total) {
+    $current_page = pager_default_initialize($total, $limit);
+    $offset = $current_page * $limit;
+  }
+ 
+  return $offset;
 }
