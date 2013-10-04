@@ -168,20 +168,20 @@ function islandora_critical_get_related_transcriptions($versionable_object_pid) 
  */
 function islandora_critical_apparatus_get_datastreams() {
   return array(
-    'title_page' => t('Title Page'),
-    'epigraph' => t('Epigraph'),
-    'preface' => t('Preface'),
-    'foreword' => t('Foreword'),
-    'introduction' => t('Introduction'),
-    'illustrations' => t('List of Illustrations, Figures, Graphs'),
-    'acknowledgements' => t('Acknowledgements'),
-    'editorial_introduction' => t('Editorial Introduction'),
-    'headnote' => t('Headnote'),
-    'footnote' => t('Footnotes'),
-    'endnotes' => t('Endnotes'),
-    'epilogue' => t('Epilogue'),
-    'afterword' => t('Afterword'),
-    'editorial_procedure' => t('Editorial Procedure'),
+    'title_page' => 'Title Page',
+    'epigraph' => 'Epigraph',
+    'preface' => 'Preface',
+    'foreword' => 'Foreword',
+    'introduction' => 'Introduction',
+    'illustrations' => 'List of Illustrations, Figures, Graphs',
+    'acknowledgements' => 'Acknowledgements',
+    'editorial_introduction' => 'Editorial Introduction',
+    'headnote' => 'Headnote',
+    'footnote' => 'Footnotes',
+    'endnotes' => 'Endnotes',
+    'epilogue' => 'Epilogue',
+    'afterword' => 'Afterword',
+    'editorial_procedures' => 'Editorial Procedures',
   );
 }
 

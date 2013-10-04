@@ -20,6 +20,15 @@ define('ISLANDORA_CRITICAL_EDITION_IS_CRITICAL_EDITION_OF', 'isCriticalEditionOf
  * Implements hook_menu().
  */
 function islandora_critical_edition_menu() {
+  $items['admin/islandora/critical_edition'] = array(
+   'title' => 'Islandora Critical Edition',
+   'description' => 'Configure the Critical Edition Solution Pack.',
+   'page callback' => 'drupal_get_form',
+   'page arguments' => array('islandora_critical_edition_admin_settings_form'),
+   'access arguments' => array('administer site configuration'),
+   'file' => 'includes/admin.form.inc',
+   'type' => MENU_NORMAL_ITEM,
+  );
   $items['islandora/object/%islandora_object/critical_editions'] = array(
     'title' => 'Critical Editions',
     'page callback' => 'islandora_critical_edition_management',
@@ -232,7 +241,7 @@ function islandora_critical_edition_permission() {
       'title' => t('Create Versionable Object'),
       'description' => t('Create Versionable object as a member of the Critical Edition.'),
     ),
-    ISLANDORA_CRITICAL_EDITION_ATTACH_VERSIONABLE_OBJECT  => array(
+    ISLANDORA_CRITICAL_EDITION_ATTACH_VERSIONABLE_OBJECT => array(
       'title' => t('Attach Versionable Object'),
       'description' => t('Attach existing Versionable object as a member of the Critical Edition.'),
     ),
@@ -552,7 +561,7 @@ function islandora_critical_edition_object_management_access($object, $context) 
         $access = TRUE;
       }
       break;
-      
+
     case 'edit_transcription':
       if (in_array('islandora:transcriptionCModel', $content_models)) {
         $access = TRUE;

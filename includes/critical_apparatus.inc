@@ -11,7 +11,7 @@
  * @param array $form
  *   Drupal form
  * @param array $form_state
- *   Drupal form state
+ *   Drupal form stateu
  * @param AbstractObject $critical_edition
  *   object representing Critical Edition
  *
@@ -23,15 +23,12 @@ function critical_apparatus_form($form, $form_state, $apparatus) {
   module_load_include('inc', 'islandora', 'includes/breadcrumb');
   drupal_set_breadcrumb(islandora_get_breadcrumbs($apparatus));
   drupal_set_title($apparatus->label);
-  $datastreams = islandora_critical_apparatus_get_datastreams();
-  $content = "Choose datastream";
+  $datastreams = variable_get('critical_apparatus_streams', islandora_critical_apparatus_get_datastreams());
   $chosen = isset($form_state['values']['datastream']) ? $form_state['values']['datastream'] : 'title_page';
   $content = t('Enter text for @datastream', array('@datastream' => $datastreams[$chosen]));
   if ($apparatus[$chosen]) {
     $content = $apparatus[$chosen]->content;
   }
-
-
   $form = array();
   $form['pid'] = array(
     '#type' => 'hidden',
@@ -97,10 +94,13 @@ function datastream_ajax_callback($form, $form_state) {
  */
 function critical_apparatus_form_submit($form, $form_state) {
   module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
-  $datastreams = islandora_critical_apparatus_get_datastreams();
+  $datastreams = variable_get('critical_apparatus_streams', islandora_critical_apparatus_get_datastreams());
   $apparatus = islandora_object_load($form_state['values']['pid']);
   $chosen = $form_state['values']['datastream'];
   $content = $form_state['values'][$chosen];
+  if (is_array($content)) {
+    $content = $content['value'];
+  }
   if ($apparatus[$chosen]) {
     $apparatus[$chosen]->content = $content;
   }
