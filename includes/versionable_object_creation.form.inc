@@ -40,18 +40,35 @@ function islandora_critical_edition_create_versionable_object_submit($form, $for
   module_load_include('inc', 'islandora', 'includes/utilities');
   $critical_edition_pid = $form_state['values']['critical_edition_pid'];
   $fedora_object = islandora_object_load($critical_edition_pid);
+  islandora_critical_edition_build_vo($fedora_object, $form_state['values']['label']);
+  drupal_goto("islandora/object/$critical_edition_pid");
+}
+
+/**
+ * Builds Versionable Object and attaches it to Critical Edition Container
+ *
+ * @param AbstractObject $fedora_object
+ *   object representing Critical Edition Container object
+ *
+ * @return String
+ *   PID of created object
+ */
+function islandora_critical_edition_build_vo($fedora_object, $label, $tn_datastream = NULL) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
   $tuque = new IslandoraTuque();
   $namespace = islandora_get_namespace($fedora_object->id);
   $versionable_object = $tuque->repository->constructObject($namespace);
   $versionable_object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOf', $fedora_object->id);
   $versionable_object->relationships->add(FEDORA_MODEL_URI, 'hasModel', 'islandora:versionableObjectCModel');
-  $versionable_object->label = $form_state['values']['label'];
+  $versionable_object->label = $label;
   $versionable_object->owner = $fedora_object->owner;
-  $tn_path = drupal_get_path('module', 'islandora_critical_edition') . '/images/folder.png';
-  $tn = $versionable_object->constructDatastream('TN');
-  $tn->label = 'Thumbnail';
-  $tn->mimetype = 'image/png';
-  $tn->setContentFromFile($tn_path);
+  if (!$tn_datastream) {
+    $tn_path = drupal_get_path('module', 'islandora_critical_edition') . '/images/folder.png';
+    $tn_datastream = $versionable_object->constructDatastream('TN');
+    $tn_datastream->label = 'Thumbnail';
+    $tn_datastream->mimetype = 'image/png';
+    $tn_datastream->setContentFromFile($tn_path);
+  }
   $versionable_object->ingestDatastream($tn);
   $mods = $versionable_object->constructDatastream('MODS');
   $mods->label = 'MODS';
@@ -59,5 +76,5 @@ function islandora_critical_edition_create_versionable_object_submit($form, $for
   $mods->setContentFromString("<mods></mods>");
   $versionable_object->ingestDatastream($mods);
   $tuque->repository->ingestObject($versionable_object);
-  drupal_goto("islandora/object/$critical_edition_pid");
+  return $versionable_object->id;
 }

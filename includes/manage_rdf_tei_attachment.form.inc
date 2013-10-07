@@ -214,9 +214,13 @@ function islandora_critical_edition_associate_tei_rdf_form($form, $form_state, $
     '#type' => 'submit',
     '#value' => t('Associate TEI-RDF Object'),
   );
-  $form['versionable_object_pid'] = array(
+  $form['container_object_pid'] = array(
     '#type' => 'hidden',
     '#value' => $object->id,
+  );
+  $form['container_object_model'] = array(
+    '#type' => 'hidden',
+    '#value' => $object_model,
   );
   return $form;
   $form = array();
@@ -240,4 +244,19 @@ function islandora_critical_edition_prep_form($object, $content_model) {
   }
  
   return $offset;
+}
+
+function islandora_critical_edition_associate_tei_rdf_form_submit($form, $form_state) {
+  module_load_include('inc', 'islandora_critical_edition', 'includes/versionable_object_creation.form');
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+
+  $type = $form_state['values']['container_object_model'];
+  $tei_rdf = $form_state['values']['tei_rdf_objects'];
+  $tei_rdf_object = islandora_object_load($tei_rdf);
+  
+  if ($type == 'islandora:criticalEditionContainerCModel') {
+    $container_object = islandora_object_load($form_state['values']['container_object_pid']);
+    islandora_critical_edition_build_vo($container_object);
+  }
+  
 }

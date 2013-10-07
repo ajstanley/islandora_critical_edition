@@ -152,6 +152,7 @@ function islandora_critical_edition_preprocess_islandora_critical_edition(&$vari
 function islandora_critical_edition_preprocess_islandora_critical_apparatus(&$variables) {
   module_load_include('inc', 'islandora_image_annotation', 'includes/utils');
   module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
+  // @TODO add string translation
   $variables['datastreams'] = variable_get('critical_apparatus_streams', islandora_critical_apparatus_get_datastreams());
   islandora_image_annotation_include_common_css();
   $critical_edition_module_path = drupal_get_path('module', 'islandora_critical_edition');
@@ -160,7 +161,7 @@ function islandora_critical_edition_preprocess_islandora_critical_apparatus(&$va
 }
 
 /**
- * Implements hook_preprocess_islandora_critical_edition().
+ * Implements hook_preprocess_islandora_critical_edition_container().
  */
 
 function islandora_critical_edition_preprocess_islandora_critical_edition_container(&$variables) {
@@ -168,7 +169,6 @@ function islandora_critical_edition_preprocess_islandora_critical_edition_contai
   drupal_add_css("$path/css/critical_edition_container.css");
   module_load_include('inc', 'islandora_critical_edition', 'includes/utilities');
   $members = islandora_critical_edition_get_members($variables['islandora_object']->id);
-  $apparatus = array_keys($members, 'islandora:criticalApparatusCModel');
   $variables['apparatus'] = array_keys($members, 'islandora:criticalApparatusCModel');
   $variables['versionable_objects'] = array_keys($members, 'islandora:versionableObjectCModel');
 }
